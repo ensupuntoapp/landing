@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { ChangeEvent, FormEvent, useState } from "react";
 
-type UserRole = "parent" | "school" | "catering" | "other";
 type ChildrenCount = "1" | "2" | "3+";
 type PlanningTime = "lt30" | "30to60" | "1to2h" | "gt2h";
 type InterestLevel =
@@ -12,45 +11,27 @@ type InterestLevel =
   | "not_sure"
   | "probably_no"
   | "definitely_no";
-type ValuableFeature =
-  | "menus_comedor"
-  | "shopping_list"
-  | "quick_recipes"
-  | "reminders"
-  | "community";
-type FrustrationKey =
-  | "daily_choice"
-  | "cooking_time"
-  | "food_waste"
-  | "balanced_nutrition";
+type SchoolIntegration = "yes_time_saver" | "neutral" | "not_needed";
 
 interface SurveyFormValues {
   email: string;
   website: string;
-  role: UserRole | "";
   childrenCount: ChildrenCount | "";
+  schoolName: string;
   planningTime: PlanningTime | "";
-  frustrations: Record<FrustrationKey, number>;
+  frustrationDecision: number;
+  frustrationWaste: number;
   interest: InterestLevel | "";
-  valuableFeatures: ValuableFeature[];
-  mustHave: string;
+  schoolIntegration: SchoolIntegration | "";
 }
 
 interface FormErrors {
   email?: string;
-  role?: string;
   childrenCount?: string;
   planningTime?: string;
   interest?: string;
-  valuableFeatures?: string;
+  schoolIntegration?: string;
 }
-
-const roleOptions: Array<{ value: UserRole; label: string }> = [
-  { value: "parent", label: "Padre/madre con hijos en el colegio" },
-  { value: "school", label: "Trabajo en un colegio/centro educativo" },
-  { value: "catering", label: "Trabajo en catering escolar" },
-  { value: "other", label: "Otro" },
-];
 
 const planningTimeOptions: Array<{ value: PlanningTime; label: string }> = [
   { value: "lt30", label: "Menos de 30 minutos" },
@@ -67,46 +48,24 @@ const interestOptions: Array<{ value: InterestLevel; label: string }> = [
   { value: "definitely_no", label: "Definitivamente no" },
 ];
 
-const valuableFeatureOptions: Array<{ value: ValuableFeature; label: string }> =
-  [
-    {
-      value: "menus_comedor",
-      label: "Menús personalizados según el comedor",
-    },
-    {
-      value: "shopping_list",
-      label: "Lista de compra con cantidades exactas",
-    },
-    { value: "quick_recipes", label: "Recetas rápidas (< 30 min)" },
-    { value: "reminders", label: "Recordatorios y notificaciones" },
-    { value: "community", label: "Ver qué comen otras familias" },
-  ];
-
-const frustrationItems: Array<{ key: FrustrationKey; label: string }> = [
-  { key: "daily_choice", label: "No sé qué cocinar cada día" },
-  { key: "cooking_time", label: "Tengo poco tiempo para cocinar" },
-  { key: "food_waste", label: "Desperdicio mucha comida" },
-  {
-    key: "balanced_nutrition",
-    label: "No sé si mis hijos comen equilibrado",
-  },
+const schoolIntegrationOptions: Array<{ value: SchoolIntegration; label: string }> = [
+  { value: "yes_time_saver", label: "Sí, me ahorraría mucho tiempo" },
+  { value: "neutral", label: "Me daría igual" },
+  { value: "not_needed", label: "No lo veo necesario" },
 ];
+
+const scoreOptions = [1, 2, 3, 4, 5];
 
 const initialFormValues: SurveyFormValues = {
   email: "",
   website: "",
-  role: "",
   childrenCount: "",
+  schoolName: "",
   planningTime: "",
-  frustrations: {
-    daily_choice: 3,
-    cooking_time: 3,
-    food_waste: 3,
-    balanced_nutrition: 3,
-  },
+  frustrationDecision: 3,
+  frustrationWaste: 3,
   interest: "",
-  valuableFeatures: [],
-  mustHave: "",
+  schoolIntegration: "",
 };
 
 function validateEmail(value: string): boolean {
@@ -117,62 +76,68 @@ function validateEmail(value: string): boolean {
 }
 
 function HeroSection() {
+  const bullets = [
+    "Ahorra 2-3h cada semana",
+    "Menos desperdicio de comida",
+    "Cenas equilibradas sin esfuerzo",
+  ];
+
   return (
-    <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white to-emerald-50/70">
-      <div className="pointer-events-none absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-emerald-200/40 blur-3xl" />
-      <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-16 sm:px-10 md:py-24 lg:grid-cols-2 lg:items-center">
+    <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-emerald-50/60 to-slate-50">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 rounded-full bg-emerald-200/50 blur-3xl" />
+      <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-20 sm:px-10 md:py-28 lg:grid-cols-2 lg:items-center">
         <div>
-          <p className="mb-5 inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-4 py-1 text-sm font-semibold text-emerald-800">
+          <p className="mb-6 inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-4 py-1 text-sm font-semibold text-emerald-900">
             EnSuPunto
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
-            Menos estrés en la cocina, más tiempo en familia
+            Deja de pensar qué cocinar cada día
           </h1>
-          <p className="mt-6 max-w-xl text-lg text-slate-700">
-            Planifica cenas equilibradas para tu familia en función de lo que
-            tus hijos ya han comido en el colegio.
+          <p className="mt-6 max-w-xl text-lg text-slate-700 sm:text-xl">
+            Recibe cenas semanales para tu familia basadas en lo que tus hijos han comido en el
+            colegio.
           </p>
-          <p className="mt-4 max-w-xl text-base text-slate-600">
-            Más tiempo en familia, menos desperdicio y mejor alimentación.
-            Todo, en su punto.
-          </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <ul className="mt-8 space-y-3 text-base font-medium text-slate-800">
+            {bullets.map((bullet) => (
+              <li key={bullet} className="flex items-center gap-3">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-sm text-white">
+                  ✓
+                </span>
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
               href="#encuesta"
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-700"
+              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-300/40 transition hover:bg-emerald-700"
             >
-              Únete a la lista de espera
+              Quiero mi menú semanal
             </a>
             <a
               href="#como-funciona"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-7 py-4 text-lg font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Ver cómo funciona
             </a>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-emerald-100/60">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-emerald-100/80">
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-600">Vista previa de la app</p>
+            <p className="text-sm font-semibold text-slate-500">Ejemplo semanal</p>
             <div className="mt-4 space-y-4">
-              <div className="rounded-xl border border-emerald-100 bg-white p-4">
-                <p className="text-sm font-medium text-slate-500">Menú del comedor</p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
-                  Lentejas + merluza + fruta
-                </p>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-medium text-slate-500">Colegio (mediodía)</p>
+                <p className="mt-1 font-semibold text-slate-900">Legumbres + pollo + fruta</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-sm font-medium text-emerald-800">Tu cena recomendada</p>
+                <p className="mt-1 font-semibold text-slate-900">Crema + pescado al horno + yogur</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <p className="text-sm font-medium text-slate-500">Cena recomendada</p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
-                  Crema de calabacín + tortilla + yogur natural
-                </p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <p className="text-sm font-medium text-slate-500">Lista de compra</p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
-                  9 ingredientes para la semana
-                </p>
+                <p className="text-sm font-medium text-slate-500">Lista de la compra</p>
+                <p className="mt-1 font-semibold text-slate-900">Todo calculado para 7 días</p>
               </div>
             </div>
           </div>
@@ -185,34 +150,31 @@ function HeroSection() {
 function ProblemSection() {
   const cards = [
     {
-      title: "No sé qué cocinar hoy.",
+      title: "No sé qué cocinar hoy",
       description:
-        "Terminas improvisando cada noche y repitiendo platos que no siempre encajan con lo que ya han comido.",
+        "La pregunta diaria te quita energía y acaba en improvisación de última hora.",
     },
     {
-      title: "Tiro comida cada semana.",
+      title: "Se desperdicia comida",
       description:
-        "Compras de más, cocinas de más o te faltan ingredientes justo cuando más prisa tienes.",
+        "Compras sin plan claro y terminas tirando parte de lo que hay en la nevera.",
     },
     {
-      title: "No tengo tiempo para planificar.",
+      title: "Todo recae en ti",
       description:
-        "Entre trabajo, colegio y actividades, pensar menús completos cada semana se vuelve una carga.",
+        "Planificar menús, comprar y coordinar horarios añade carga mental cada semana.",
     },
   ];
 
   return (
     <section id="problema" className="border-b border-slate-200 bg-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 md:py-24">
+      <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 md:py-24">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           ¿Te suena familiar?
         </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {cards.map((card) => (
-            <article
-              key={card.title}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-6"
-            >
+            <article key={card.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
               <h3 className="text-xl font-semibold text-slate-900">{card.title}</h3>
               <p className="mt-3 text-slate-600">{card.description}</p>
             </article>
@@ -225,38 +187,24 @@ function ProblemSection() {
 
 function HowItWorksSection() {
   const steps = [
-    {
-      title: "Conecta con el colegio",
-      description: "Sabemos qué ha comido tu hijo en el comedor escolar.",
-    },
-    {
-      title: "Recibe propuestas equilibradas",
-      description:
-        "Te proponemos cenas y, más adelante, desayunos y meriendas para complementar el día.",
-    },
-    {
-      title: "Compra sin sobrecostes",
-      description: "Generamos una lista de la compra exacta para toda la semana.",
-    },
+    "Indica el colegio de tus hijos",
+    "Recibe cenas personalizadas automáticamente",
+    "Obtén tu lista de la compra lista",
   ];
 
   return (
     <section id="como-funciona" className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 md:py-24">
+      <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 md:py-24">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Tu copiloto de alimentación familiar
+          Así de simple
         </h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
           {steps.map((step, index) => (
-            <article
-              key={step.title}
-              className="rounded-2xl border border-slate-200 bg-white p-6"
-            >
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">
+            <article key={step} className="rounded-2xl border border-slate-200 bg-white p-7">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">
                 {index + 1}
               </span>
-              <h3 className="mt-4 text-xl font-semibold text-slate-900">{step.title}</h3>
-              <p className="mt-2 text-slate-600">{step.description}</p>
+              <h3 className="mt-4 text-xl font-semibold text-slate-900">{step}</h3>
             </article>
           ))}
         </div>
@@ -266,48 +214,63 @@ function HowItWorksSection() {
 }
 
 function BenefitsSection() {
-  const familyBenefits = [
-    "Ahorro de tiempo en decisiones diarias.",
-    "Menos desperdicio y mejor control de la compra.",
-    "Más variedad en las cenas y más tranquilidad en casa.",
-  ];
-
-  const schoolBenefits = [
-    "Servicio extra para familias del centro.",
-    "Mayor engagement con el comedor escolar.",
-    "Sin cambios en su operativa habitual.",
+  const benefits = [
+    "Menos carga mental diaria",
+    "Menos comida desperdiciada",
+    "Más organización familiar",
+    "Cenas equilibradas sin pensar",
   ];
 
   return (
     <section id="beneficios" className="border-b border-slate-200 bg-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 md:py-24">
+      <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 md:py-24">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Beneficios para todos
+          Beneficios para tu familia
         </h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <article className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-            <h3 className="text-xl font-semibold text-slate-900">Para familias</h3>
-            <ul className="mt-4 space-y-3 text-slate-700">
-              {familyBenefits.map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {benefits.map((benefit) => (
+            <article key={benefit} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <p className="text-lg font-semibold text-slate-900">{benefit}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-          <article className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-            <h3 className="text-xl font-semibold text-slate-900">Para colegios</h3>
-            <ul className="mt-4 space-y-3 text-slate-700">
-              {schoolBenefits.map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <span className="mt-1 h-2.5 w-2.5 rounded-full bg-sky-500" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
+function SocialProofSection() {
+  const testimonials = [
+    {
+      quote:
+        "Con una propuesta cerrada de cenas, por fin dejamos de discutir qué preparar cada noche.",
+      author: "Marta, madre de 2 niños",
+    },
+    {
+      quote:
+        "Antes improvisaba y compraba de más. Ahora tengo una guía semanal y desperdiciamos mucho menos.",
+      author: "Carlos, padre de primaria",
+    },
+    {
+      quote:
+        "Me ahorra tiempo mental. Solo abro la app, veo plan y listo.",
+      author: "Lucía, madre de 1 niño",
+    },
+  ];
+
+  return (
+    <section className="border-b border-slate-200 bg-slate-50">
+      <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 md:py-24">
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          Pensado para familias como la tuya
+        </h2>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {testimonials.map((item) => (
+            <article key={item.author} className="rounded-2xl border border-slate-200 bg-white p-6">
+              <p className="text-slate-700">“{item.quote}”</p>
+              <p className="mt-4 text-sm font-semibold text-emerald-700">{item.author}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -317,56 +280,43 @@ function BenefitsSection() {
 interface SurveySectionProps {
   formValues: SurveyFormValues;
   errors: FormErrors;
-  featureLimitError: string;
   submitSuccess: boolean;
   submitError: string | null;
   isSubmitting: boolean;
   onInputChange: (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
-  onRoleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onInterestChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onFrustrationChange: (key: FrustrationKey, value: number) => void;
-  onFeatureToggle: (feature: ValuableFeature) => void;
+  onSchoolIntegrationChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
 function SurveySection({
   formValues,
   errors,
-  featureLimitError,
   submitSuccess,
   submitError,
   isSubmitting,
   onInputChange,
-  onRoleChange,
   onInterestChange,
-  onFrustrationChange,
-  onFeatureToggle,
+  onSchoolIntegrationChange,
   onSubmit,
 }: SurveySectionProps) {
-  const isParent = formValues.role === "parent";
-
   return (
-    <section id="encuesta" className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-16 sm:px-10 md:py-24 lg:grid-cols-[1fr_1.35fr]">
+    <section id="encuesta" className="border-b border-slate-200 bg-white">
+      <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-20 sm:px-10 md:py-24 lg:grid-cols-[1fr_1.3fr]">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Cuéntanos tu situación
+            Recibe acceso prioritario
           </h2>
           <p className="mt-4 text-slate-600">
-            Queremos validar las prioridades reales de familias y colegios para
-            construir EnSuPunto con foco en lo importante.
-          </p>
-          <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-            Este formulario es de validación temprana. Tus respuestas nos
-            ayudan a priorizar el producto.
+            Déjanos tus datos y te avisamos cuando abramos el acceso para familias.
           </p>
         </div>
 
         <form
           onSubmit={onSubmit}
-          className="space-y-7 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className="space-y-7 rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm sm:p-8"
         >
           <input
             type="text"
@@ -390,44 +340,14 @@ function SurveySection({
               value={formValues.email}
               onChange={onInputChange}
               placeholder="tu@email.com"
-              className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
             />
             {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
           </div>
 
-          <fieldset>
-            <legend className="text-sm font-semibold text-slate-800">¿Eres...? *</legend>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {roleOptions.map((option) => (
-                <label
-                  key={option.value}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm transition ${
-                    formValues.role === option.value
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="role"
-                    value={option.value}
-                    checked={formValues.role === option.value}
-                    onChange={onRoleChange}
-                    className="sr-only"
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-            {errors.role && <p className="mt-2 text-sm text-red-600">{errors.role}</p>}
-          </fieldset>
-
-          {isParent && (
+          <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label
-                htmlFor="childrenCount"
-                className="block text-sm font-semibold text-slate-800"
-              >
+              <label htmlFor="childrenCount" className="block text-sm font-semibold text-slate-800">
                 ¿Cuántos hijos tienes? *
               </label>
               <select
@@ -435,9 +355,9 @@ function SurveySection({
                 name="childrenCount"
                 value={formValues.childrenCount}
                 onChange={onInputChange}
-                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
+                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
               >
-                <option value="">Selecciona una opción</option>
+                <option value="">Selecciona</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3+">3 o más</option>
@@ -446,13 +366,25 @@ function SurveySection({
                 <p className="mt-2 text-sm text-red-600">{errors.childrenCount}</p>
               )}
             </div>
-          )}
+
+            <div>
+              <label htmlFor="schoolName" className="block text-sm font-semibold text-slate-800">
+                ¿A qué colegio va tu hijo? <span className="font-normal text-slate-500">(opcional)</span>
+              </label>
+              <input
+                id="schoolName"
+                name="schoolName"
+                type="text"
+                value={formValues.schoolName}
+                onChange={onInputChange}
+                placeholder="Ej: Colegio San José (Madrid)"
+                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
+              />
+            </div>
+          </div>
 
           <div>
-            <label
-              htmlFor="planningTime"
-              className="block text-sm font-semibold text-slate-800"
-            >
+            <label htmlFor="planningTime" className="block text-sm font-semibold text-slate-800">
               ¿Cuánto tiempo dedicas semanalmente a planificar qué cocinar? *
             </label>
             <select
@@ -460,7 +392,7 @@ function SurveySection({
               name="planningTime"
               value={formValues.planningTime}
               onChange={onInputChange}
-              className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
             >
               <option value="">Selecciona una opción</option>
               {planningTimeOptions.map((option) => (
@@ -476,39 +408,52 @@ function SurveySection({
 
           <fieldset>
             <legend className="text-sm font-semibold text-slate-800">
-              En una escala del 1 al 5, ¿cuánto te identificas con estos puntos?
+              ¿Cuánto te identificas con estas frases? (1 = nada, 5 = mucho)
             </legend>
-            <div className="mt-4 space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              {frustrationItems.map((item) => (
-                <div key={item.key}>
-                  <div className="mb-2 flex items-center justify-between gap-2 text-sm">
-                    <label htmlFor={item.key} className="font-medium text-slate-700">
-                      {item.label}
-                    </label>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      {formValues.frustrations[item.key]}/5
-                    </span>
-                  </div>
-                  <input
-                    id={item.key}
-                    type="range"
-                    min={1}
-                    max={5}
-                    value={formValues.frustrations[item.key]}
-                    onChange={(event) =>
-                      onFrustrationChange(item.key, Number(event.target.value))
-                    }
-                    className="w-full accent-emerald-600"
-                  />
-                </div>
-              ))}
+            <div className="mt-4 grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="frustrationDecision" className="block text-sm text-slate-700">
+                  Me cuesta decidir qué cocinar cada día
+                </label>
+                <select
+                  id="frustrationDecision"
+                  name="frustrationDecision"
+                  value={formValues.frustrationDecision}
+                  onChange={onInputChange}
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
+                >
+                  {scoreOptions.map((score) => (
+                    <option key={score} value={score}>
+                      {score}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="frustrationWaste" className="block text-sm text-slate-700">
+                  Siento que desperdiciamos comida
+                </label>
+                <select
+                  id="frustrationWaste"
+                  name="frustrationWaste"
+                  value={formValues.frustrationWaste}
+                  onChange={onInputChange}
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
+                >
+                  {scoreOptions.map((score) => (
+                    <option key={score} value={score}>
+                      {score}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </fieldset>
 
           <fieldset>
             <legend className="text-sm font-semibold text-slate-800">
-              Si existiera una app que generara menús para tu familia según lo
-              que comió tu hijo en el colegio, ¿la usarías? *
+              Si existiera una app que generara menús para tu familia según lo que comió tu hijo
+              en el colegio, ¿la usarías? *
             </legend>
             <div className="mt-3 space-y-2">
               {interestOptions.map((option) => (
@@ -537,64 +482,51 @@ function SurveySection({
 
           <fieldset>
             <legend className="text-sm font-semibold text-slate-800">
-              ¿Qué funciones te aportarían más valor? (máximo 3) *
+              ¿Te gustaría que tu colegio estuviera integrado automáticamente? *
             </legend>
-            <div className="mt-3 grid gap-2">
-              {valuableFeatureOptions.map((option) => (
+            <div className="mt-3 space-y-2">
+              {schoolIntegrationOptions.map((option) => (
                 <label
                   key={option.value}
-                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 transition hover:border-slate-400"
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition ${
+                    formValues.schoolIntegration === option.value
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-slate-300 bg-white hover:border-slate-400"
+                  }`}
                 >
                   <input
-                    type="checkbox"
-                    checked={formValues.valuableFeatures.includes(option.value)}
-                    onChange={() => onFeatureToggle(option.value)}
+                    type="radio"
+                    name="schoolIntegration"
+                    value={option.value}
+                    checked={formValues.schoolIntegration === option.value}
+                    onChange={onSchoolIntegrationChange}
                     className="mt-0.5 h-4 w-4 accent-emerald-600"
                   />
-                  {option.label}
+                  <span className="text-slate-700">{option.label}</span>
                 </label>
               ))}
             </div>
-            {featureLimitError && (
-              <p className="mt-2 text-sm text-amber-700">{featureLimitError}</p>
-            )}
-            {errors.valuableFeatures && (
-              <p className="mt-2 text-sm text-red-600">{errors.valuableFeatures}</p>
+            {errors.schoolIntegration && (
+              <p className="mt-2 text-sm text-red-600">{errors.schoolIntegration}</p>
             )}
           </fieldset>
 
-          <div>
-            <label htmlFor="mustHave" className="block text-sm font-semibold text-slate-800">
-              ¿Hay algo que te gustaría que esta app hiciera sí o sí?
-            </label>
-            <textarea
-              id="mustHave"
-              name="mustHave"
-              rows={4}
-              value={formValues.mustHave}
-              onChange={onInputChange}
-              placeholder="Opcional"
-              className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none ring-emerald-500 transition focus:ring-2"
-            />
-          </div>
-
           <p className="text-xs leading-relaxed text-slate-500">
-            Al enviar este formulario, aceptas que guardemos tus datos para
-            informarte sobre el proyecto. Podrás darte de baja en cualquier
-            momento.
+            Al enviar este formulario, aceptas que guardemos tus datos para informarte sobre el
+            proyecto. Podrás darte de baja en cualquier momento.
           </p>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-2xl bg-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-300/40 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSubmitting ? "Enviando..." : "Enviar validación"}
+            {isSubmitting ? "Enviando..." : "Quiero mi menú semanal"}
           </button>
 
           {submitSuccess && (
             <p className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-              Gracias. Hemos guardado tu respuesta de validación.
+              Gracias. Te avisaremos en cuanto abramos acceso prioritario.
             </p>
           )}
           {submitError && (
@@ -618,29 +550,26 @@ function TeamSection() {
     {
       name: "Rubén Blanco Baeza",
       jobTitle: "CTO & Co-founder",
-      bio: "Es ingeniero de software y responsable técnico, especializado en arquitectura y sistemas distribuidos. Ha liderado equipos y decisiones técnicas en entornos críticos, priorizando robustez, seguridad y evolución sostenible. En EnSuPunto, convierte esa experiencia en una plataforma que ahorra tiempo y mejora hábitos en familia.",
+      bio: "Ingeniero de software especializado en arquitectura y sistemas distribuidos. En EnSuPunto convierte complejidad técnica en una experiencia simple para familias.",
       imageSrc: "/founders/ruben.png",
     },
     {
       name: "Iván",
       jobTitle: "CEO & Co-founder",
-      bio: "Lidera estrategia de negocio y operaciones, con foco en colaboración con colegios y partners. En EnSuPunto impulsa una propuesta práctica para simplificar la planificación familiar y mejorar la alimentación diaria.",
+      bio: "Lidera producto y crecimiento con foco en resolver problemas reales del día a día de los hogares con hijos.",
       imageSrc: "/founders/ivan.png",
     },
   ];
 
   return (
-    <section id="equipo" className="border-b border-slate-200 bg-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 md:py-24">
+    <section id="equipo" className="border-b border-slate-200 bg-slate-50">
+      <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 md:py-24">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Quiénes somos
         </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {members.map((member) => (
-            <article
-              key={member.name}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-6"
-            >
+            <article key={member.name} className="rounded-2xl border border-slate-200 bg-white p-6">
               <Image
                 src={member.imageSrc}
                 alt={`Foto de ${member.name}`}
@@ -652,7 +581,7 @@ function TeamSection() {
               <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-emerald-700">
                 {member.jobTitle}
               </p>
-              <p className="mt-2 text-slate-600">{member.bio}</p>
+              <p className="mt-3 text-slate-600">{member.bio}</p>
             </article>
           ))}
         </div>
@@ -665,7 +594,7 @@ function SiteFooter() {
   return (
     <footer className="bg-slate-900">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:px-10">
-        <p>Contacto: hola@ensupunto.es</p>
+        <p>Contacto: hola@ensupunto.com</p>
         <div className="flex flex-wrap items-center gap-4">
           <a
             href="https://www.linkedin.com/company/ensupuntoapp/"
@@ -691,30 +620,6 @@ function SiteFooter() {
           >
             X / Twitter
           </a>
-          <a
-            href="https://www.facebook.com/ensupuntoapp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition hover:text-white"
-          >
-            Facebook
-          </a>
-          <a
-            href="https://www.tiktok.com/@ensupuntoapp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition hover:text-white"
-          >
-            TikTok
-          </a>
-          <a
-            href="https://www.youtube.com/@ensupuntoapp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition hover:text-white"
-          >
-            YouTube
-          </a>
           <a href="/privacidad" className="transition hover:text-white">
             Política de privacidad
           </a>
@@ -727,7 +632,6 @@ function SiteFooter() {
 export default function HomePage() {
   const [formValues, setFormValues] = useState<SurveyFormValues>(initialFormValues);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [featureLimitError, setFeatureLimitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -740,26 +644,17 @@ export default function HomePage() {
     setSubmitError(null);
     setErrors((previous) => ({ ...previous, [name]: undefined }));
 
+    if (name === "frustrationDecision" || name === "frustrationWaste") {
+      setFormValues((previous) => ({
+        ...previous,
+        [name]: Number(value),
+      }));
+      return;
+    }
+
     setFormValues((previous) => ({
       ...previous,
       [name]: value,
-    }));
-  };
-
-  const handleRoleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const selectedRole = event.target.value as UserRole;
-    setSubmitSuccess(false);
-    setSubmitError(null);
-    setErrors((previous) => ({
-      ...previous,
-      role: undefined,
-      childrenCount: undefined,
-    }));
-
-    setFormValues((previous) => ({
-      ...previous,
-      role: selectedRole,
-      childrenCount: selectedRole === "parent" ? previous.childrenCount : "",
     }));
   };
 
@@ -771,43 +666,12 @@ export default function HomePage() {
     setFormValues((previous) => ({ ...previous, interest: selectedInterest }));
   };
 
-  const handleFrustrationChange = (key: FrustrationKey, value: number) => {
+  const handleSchoolIntegrationChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value as SchoolIntegration;
     setSubmitSuccess(false);
     setSubmitError(null);
-    setFormValues((previous) => ({
-      ...previous,
-      frustrations: {
-        ...previous.frustrations,
-        [key]: value,
-      },
-    }));
-  };
-
-  const handleFeatureToggle = (feature: ValuableFeature) => {
-    setSubmitSuccess(false);
-    setSubmitError(null);
-
-    if (formValues.valuableFeatures.includes(feature)) {
-      setFeatureLimitError("");
-      setErrors((previous) => ({ ...previous, valuableFeatures: undefined }));
-      setFormValues((previous) => ({
-        ...previous,
-        valuableFeatures: previous.valuableFeatures.filter((item) => item !== feature),
-      }));
-      return;
-    }
-
-    if (formValues.valuableFeatures.length >= 3) {
-      setFeatureLimitError("Puedes seleccionar un máximo de 3 opciones.");
-      return;
-    }
-
-    setFeatureLimitError("");
-    setErrors((previous) => ({ ...previous, valuableFeatures: undefined }));
-    setFormValues((previous) => ({
-      ...previous,
-      valuableFeatures: [...previous.valuableFeatures, feature],
-    }));
+    setErrors((previous) => ({ ...previous, schoolIntegration: undefined }));
+    setFormValues((previous) => ({ ...previous, schoolIntegration: value }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -816,41 +680,42 @@ export default function HomePage() {
 
     const newErrors: FormErrors = {};
     const trimmedEmail = formValues.email.trim();
+    const trimmedSchool = formValues.schoolName.trim();
 
     if (!validateEmail(trimmedEmail)) {
       newErrors.email = "Introduce un email válido.";
     }
-
-    if (!formValues.role) {
-      newErrors.role = "Selecciona tu perfil.";
+    if (!formValues.childrenCount) {
+      newErrors.childrenCount = "Selecciona cuántos hijos tienes.";
     }
-
-    if (formValues.role === "parent" && !formValues.childrenCount) {
-      newErrors.childrenCount = "Indica cuántos hijos tienes.";
-    }
-
     if (!formValues.planningTime) {
       newErrors.planningTime = "Selecciona una opción.";
     }
-
     if (!formValues.interest) {
       newErrors.interest = "Selecciona una opción.";
     }
-
-    if (formValues.valuableFeatures.length === 0) {
-      newErrors.valuableFeatures = "Selecciona al menos una función.";
+    if (!formValues.schoolIntegration) {
+      newErrors.schoolIntegration = "Selecciona una opción.";
     }
 
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) {
       setSubmitSuccess(false);
       return;
     }
 
-    const payload: SurveyFormValues = {
-      ...formValues,
+    const payload = {
       email: trimmedEmail,
+      website: formValues.website,
+      childrenCount: formValues.childrenCount,
+      schoolName: trimmedSchool,
+      planningTime: formValues.planningTime,
+      frustrations: {
+        daily_decision: formValues.frustrationDecision,
+        food_waste: formValues.frustrationWaste,
+      },
+      interest: formValues.interest,
+      schoolIntegration: formValues.schoolIntegration,
     };
 
     setIsSubmitting(true);
@@ -862,9 +727,7 @@ export default function HomePage() {
       });
 
       if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error ?? "No se pudo guardar tu respuesta.");
       }
 
@@ -887,11 +750,8 @@ export default function HomePage() {
           <a href="#" className="text-lg font-bold tracking-tight text-slate-900">
             EnSuPunto
           </a>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <nav className="hidden items-center gap-5 text-sm font-medium text-slate-600 md:flex">
-              <a href="#problema" className="transition hover:text-slate-900">
-                Problema
-              </a>
               <a href="#como-funciona" className="transition hover:text-slate-900">
                 Cómo funciona
               </a>
@@ -899,16 +759,14 @@ export default function HomePage() {
                 Beneficios
               </a>
               <a href="#encuesta" className="transition hover:text-slate-900">
-                Encuesta
+                Acceso
               </a>
             </nav>
             <a
-              href="https://ensupunto.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-sky-600 px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-sky-700 sm:px-4 sm:text-sm"
+              href="#encuesta"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
-              Acceso app (próximamente)
+              Quiero mi menú semanal
             </a>
           </div>
         </div>
@@ -919,18 +777,16 @@ export default function HomePage() {
         <ProblemSection />
         <HowItWorksSection />
         <BenefitsSection />
+        <SocialProofSection />
         <SurveySection
           formValues={formValues}
           errors={errors}
-          featureLimitError={featureLimitError}
           submitSuccess={submitSuccess}
           submitError={submitError}
           isSubmitting={isSubmitting}
           onInputChange={handleInputChange}
-          onRoleChange={handleRoleChange}
           onInterestChange={handleInterestChange}
-          onFrustrationChange={handleFrustrationChange}
-          onFeatureToggle={handleFeatureToggle}
+          onSchoolIntegrationChange={handleSchoolIntegrationChange}
           onSubmit={handleSubmit}
         />
         <TeamSection />
