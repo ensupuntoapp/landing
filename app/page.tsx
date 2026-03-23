@@ -26,6 +26,7 @@ type FrustrationKey =
 
 interface SurveyFormValues {
   email: string;
+  website: string;
   role: UserRole | "";
   childrenCount: ChildrenCount | "";
   planningTime: PlanningTime | "";
@@ -93,6 +94,7 @@ const frustrationItems: Array<{ key: FrustrationKey; label: string }> = [
 
 const initialFormValues: SurveyFormValues = {
   email: "",
+  website: "",
   role: "",
   childrenCount: "",
   planningTime: "",
@@ -317,6 +319,8 @@ interface SurveySectionProps {
   errors: FormErrors;
   featureLimitError: string;
   submitSuccess: boolean;
+  submitError: string | null;
+  isSubmitting: boolean;
   onInputChange: (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
@@ -332,6 +336,8 @@ function SurveySection({
   errors,
   featureLimitError,
   submitSuccess,
+  submitError,
+  isSubmitting,
   onInputChange,
   onRoleChange,
   onInterestChange,
@@ -362,6 +368,17 @@ function SurveySection({
           onSubmit={onSubmit}
           className="space-y-7 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
         >
+          <input
+            type="text"
+            name="website"
+            value={formValues.website}
+            onChange={onInputChange}
+            autoComplete="off"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="hidden"
+          />
+
           <div>
             <label htmlFor="email" className="block text-sm font-semibold text-slate-800">
               Email *
@@ -569,14 +586,20 @@ function SurveySection({
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-700"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Enviar validación
+            {isSubmitting ? "Enviando..." : "Enviar validación"}
           </button>
 
           {submitSuccess && (
             <p className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
               Gracias. Hemos guardado tu respuesta de validación.
+            </p>
+          )}
+          {submitError && (
+            <p className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+              {submitError}
             </p>
           )}
         </form>
@@ -706,12 +729,15 @@ export default function HomePage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [featureLimitError, setFeatureLimitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = event.target;
     setSubmitSuccess(false);
+    setSubmitError(null);
     setErrors((previous) => ({ ...previous, [name]: undefined }));
 
     setFormValues((previous) => ({
@@ -723,6 +749,7 @@ export default function HomePage() {
   const handleRoleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedRole = event.target.value as UserRole;
     setSubmitSuccess(false);
+    setSubmitError(null);
     setErrors((previous) => ({
       ...previous,
       role: undefined,
@@ -739,12 +766,14 @@ export default function HomePage() {
   const handleInterestChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedInterest = event.target.value as InterestLevel;
     setSubmitSuccess(false);
+    setSubmitError(null);
     setErrors((previous) => ({ ...previous, interest: undefined }));
     setFormValues((previous) => ({ ...previous, interest: selectedInterest }));
   };
 
   const handleFrustrationChange = (key: FrustrationKey, value: number) => {
     setSubmitSuccess(false);
+    setSubmitError(null);
     setFormValues((previous) => ({
       ...previous,
       frustrations: {
@@ -756,6 +785,7 @@ export default function HomePage() {
 
   const handleFeatureToggle = (feature: ValuableFeature) => {
     setSubmitSuccess(false);
+    setSubmitError(null);
 
     if (formValues.valuableFeatures.includes(feature)) {
       setFeatureLimitError("");
@@ -780,8 +810,9 @@ export default function HomePage() {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setSubmitError(null);
 
     const newErrors: FormErrors = {};
     const trimmedEmail = formValues.email.trim();
@@ -822,12 +853,31 @@ export default function HomePage() {
       email: trimmedEmail,
     };
 
-    // Punto de integración recomendado:
-    // 1) API interna: POST /api/lead para guardar en Supabase.
-    //    await fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    // 2) Servicio externo: reenviar estos datos a Tally/Typeform desde aquí o desde la API.
-    console.log("EnSuPunto validation payload", payload);
-    setSubmitSuccess(true);
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(data?.error ?? "No se pudo guardar tu respuesta.");
+      }
+
+      setSubmitSuccess(true);
+    } catch (error) {
+      console.error("Lead submission failed", error);
+      setSubmitSuccess(false);
+      setSubmitError(
+        "No hemos podido guardar tu respuesta ahora mismo. Inténtalo de nuevo en unos minutos.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -874,6 +924,8 @@ export default function HomePage() {
           errors={errors}
           featureLimitError={featureLimitError}
           submitSuccess={submitSuccess}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
           onInputChange={handleInputChange}
           onRoleChange={handleRoleChange}
           onInterestChange={handleInterestChange}
