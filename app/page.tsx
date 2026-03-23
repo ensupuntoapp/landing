@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ChangeEvent, FormEvent, useState } from "react";
 
 type UserRole = "parent" | "school" | "catering" | "other";
@@ -585,14 +586,23 @@ function SurveySection({
 }
 
 function TeamSection() {
-  const members = [
+  const members: Array<{
+    name: string;
+    jobTitle: string;
+    bio: string;
+    imageSrc: string;
+  }> = [
     {
-      name: "Nombre fundador/a 1",
-      bio: "Perfil producto y tecnología. Experiencia construyendo productos digitales para familias.",
+      name: "Rubén Blanco Baeza",
+      jobTitle: "CTO & Co-founder",
+      bio: "Es ingeniero de software y responsable técnico, especializado en arquitectura y sistemas distribuidos. Ha liderado equipos y decisiones técnicas en entornos críticos, priorizando robustez, seguridad y evolución sostenible. En EnSuPunto, convierte esa experiencia en una plataforma que ahorra tiempo y mejora hábitos en familia.",
+      imageSrc: "/founders/ruben.png",
     },
     {
-      name: "Nombre fundador/a 2",
-      bio: "Perfil negocio y operaciones. Foco en colegios, partnerships y crecimiento.",
+      name: "Iván",
+      jobTitle: "CEO & Co-founder",
+      bio: "Lidera estrategia de negocio y operaciones, con foco en colaboración con colegios y partners. En EnSuPunto impulsa una propuesta práctica para simplificar la planificación familiar y mejorar la alimentación diaria.",
+      imageSrc: "/founders/ivan.png",
     },
   ];
 
@@ -608,8 +618,17 @@ function TeamSection() {
               key={member.name}
               className="rounded-2xl border border-slate-200 bg-slate-50 p-6"
             >
-              <div className="h-28 w-28 rounded-2xl border border-slate-300 bg-slate-200" />
+              <Image
+                src={member.imageSrc}
+                alt={`Foto de ${member.name}`}
+                width={112}
+                height={112}
+                className="h-28 w-28 rounded-2xl border border-slate-300 object-cover"
+              />
               <h3 className="mt-5 text-xl font-semibold text-slate-900">{member.name}</h3>
+              <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                {member.jobTitle}
+              </p>
               <p className="mt-2 text-slate-600">{member.bio}</p>
             </article>
           ))}
@@ -623,16 +642,55 @@ function SiteFooter() {
   return (
     <footer className="bg-slate-900">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:px-10">
-        <p>Contacto: hola@ensupunto.com</p>
+        <p>Contacto: hola@ensupunto.es</p>
         <div className="flex flex-wrap items-center gap-4">
-          <a href="#" className="transition hover:text-white">
+          <a
+            href="https://www.linkedin.com/company/ensupuntoapp/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-white"
+          >
             LinkedIn
           </a>
-          <a href="#" className="transition hover:text-white">
+          <a
+            href="https://www.instagram.com/ensupuntoapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-white"
+          >
             Instagram
           </a>
-          <a href="#" className="transition hover:text-white">
+          <a
+            href="https://x.com/ensupuntoapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-white"
+          >
             X / Twitter
+          </a>
+          <a
+            href="https://www.facebook.com/ensupuntoapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-white"
+          >
+            Facebook
+          </a>
+          <a
+            href="https://www.tiktok.com/@ensupuntoapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-white"
+          >
+            TikTok
+          </a>
+          <a
+            href="https://www.youtube.com/@ensupuntoapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-white"
+          >
+            YouTube
           </a>
           <a href="/privacidad" className="transition hover:text-white">
             Política de privacidad
@@ -779,20 +837,30 @@ export default function HomePage() {
           <a href="#" className="text-lg font-bold tracking-tight text-slate-900">
             EnSuPunto
           </a>
-          <nav className="hidden items-center gap-5 text-sm font-medium text-slate-600 md:flex">
-            <a href="#problema" className="transition hover:text-slate-900">
-              Problema
+          <div className="flex items-center gap-3">
+            <nav className="hidden items-center gap-5 text-sm font-medium text-slate-600 md:flex">
+              <a href="#problema" className="transition hover:text-slate-900">
+                Problema
+              </a>
+              <a href="#como-funciona" className="transition hover:text-slate-900">
+                Cómo funciona
+              </a>
+              <a href="#beneficios" className="transition hover:text-slate-900">
+                Beneficios
+              </a>
+              <a href="#encuesta" className="transition hover:text-slate-900">
+                Encuesta
+              </a>
+            </nav>
+            <a
+              href="https://ensupunto.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-sky-600 px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-sky-700 sm:px-4 sm:text-sm"
+            >
+              Acceso app (próximamente)
             </a>
-            <a href="#como-funciona" className="transition hover:text-slate-900">
-              Cómo funciona
-            </a>
-            <a href="#beneficios" className="transition hover:text-slate-900">
-              Beneficios
-            </a>
-            <a href="#encuesta" className="transition hover:text-slate-900">
-              Encuesta
-            </a>
-          </nav>
+          </div>
         </div>
       </header>
 
